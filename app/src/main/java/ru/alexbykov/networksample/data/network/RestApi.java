@@ -56,6 +56,7 @@ public final class RestApi {
 
         return new OkHttpClient.Builder()
                 .addInterceptor(ApiKeyInterceptor.create(API_KEY))
+                .addInterceptor(networkLogInterceptor)
                 .connectTimeout(TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
                 .writeTimeout(TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
                 .readTimeout(TIMEOUT_IN_SECONDS, TimeUnit.SECONDS)
