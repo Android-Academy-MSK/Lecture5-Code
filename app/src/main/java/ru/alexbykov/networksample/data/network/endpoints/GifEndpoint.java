@@ -11,6 +11,7 @@ import ru.alexbykov.networksample.data.network.DefaultResponse;
 import ru.alexbykov.networksample.data.network.dto.GifDTO;
 
 public interface GifEndpoint {
+    @NonNull
     @GET("gifs/search")
     Call<DefaultResponse<List<GifDTO>>> search(@Query("q") @NonNull String search);
 }

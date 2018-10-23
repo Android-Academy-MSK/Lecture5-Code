@@ -147,7 +147,6 @@ public final class MainActivity extends AppCompatActivity {
             return;
         }
 
-
         //check if request executed OR already in queue
         if (searchRequest.isExecuted()) {
             searchRequest.cancel();
