@@ -34,7 +34,7 @@ public final class ApiKeyInterceptor implements Interceptor {
                 .addQueryParameter(PARAM_API_KEY, apiKey)
                 .build();
 
-        Request requestWithAttachedApiKey = requestWithoutApiKey.newBuilder()
+        final Request requestWithAttachedApiKey = requestWithoutApiKey.newBuilder()
                 .url(url)
                 .build();
 
