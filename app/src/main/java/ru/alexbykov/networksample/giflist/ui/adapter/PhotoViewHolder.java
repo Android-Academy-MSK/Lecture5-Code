@@ -1,4 +1,4 @@
-package ru.alexbykov.networksample.ui.adapter;
+package ru.alexbykov.networksample.giflist.ui.adapter;
 
 import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;

@@ -1,4 +1,4 @@
-package ru.alexbykov.networksample.ui.adapter;
+package ru.alexbykov.networksample.giflist.ui.adapter;
 
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;

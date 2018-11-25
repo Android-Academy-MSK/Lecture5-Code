@@ -1,9 +1,7 @@
-package ru.alexbykov.networksample.ui;
+package ru.alexbykov.networksample.giflist.ui;
 
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
@@ -13,27 +11,29 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.arellomobile.mvp.MvpAppCompatActivity;
+import com.arellomobile.mvp.presenter.InjectPresenter;
+import com.arellomobile.mvp.presenter.ProvidePresenter;
 import com.bumptech.glide.Glide;
 
-import java.io.IOException;
 import java.util.List;
 
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.schedulers.Schedulers;
-import retrofit2.Response;
 import ru.alexbykov.networksample.R;
-import ru.alexbykov.networksample.data.network.DefaultResponse;
 import ru.alexbykov.networksample.data.network.RestApi;
 import ru.alexbykov.networksample.data.network.dto.GifDTO;
-import ru.alexbykov.networksample.ui.adapter.PhotosAdapter;
+import ru.alexbykov.networksample.giflist.common.State;
+import ru.alexbykov.networksample.giflist.mvp.GifListPresenter;
+import ru.alexbykov.networksample.giflist.mvp.GifListView;
+import ru.alexbykov.networksample.giflist.ui.adapter.PhotosAdapter;
 
-public final class MainActivity extends AppCompatActivity {
+public final class GifListActivity extends MvpAppCompatActivity implements GifListView {
 
     private static final int LAYOUT = R.layout.activity_main;
 
-    public static final String DEFAULT_SEARCH_REQUEST = "Bojack Horseman ";
+
+    @InjectPresenter
+    GifListPresenter gifListPresenter;
+
 
     private Toolbar toolbar;
     private SearchView searchView;
@@ -45,8 +45,11 @@ public final class MainActivity extends AppCompatActivity {
     private View viewNoData;
     private TextView tvError;
 
-    private final CompositeDisposable compositeDisposable = new CompositeDisposable();
 
+    @ProvidePresenter
+    GifListPresenter provideGifListPresenter() {
+        return new GifListPresenter(RestApi.getInstance());
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,14 +62,12 @@ public final class MainActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         setupUx();
-        loadGifs(DEFAULT_SEARCH_REQUEST);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         unbindUx();
-        compositeDisposable.clear();
     }
 
     private void unbindUx() {
@@ -85,7 +86,7 @@ public final class MainActivity extends AppCompatActivity {
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                validateAndLoadGifs(query);
+                gifListPresenter.onQueryGifs(query);
                 return true;
             }
 
@@ -95,78 +96,16 @@ public final class MainActivity extends AppCompatActivity {
                 return false;
             }
         });
-        btnTryAgain.setOnClickListener(v -> onClickTryAgain());
-    }
-
-    private void onClickTryAgain() {
-        final String query = searchView.getQuery().toString();
-        if (query.isEmpty()) {
-            loadGifs(DEFAULT_SEARCH_REQUEST);
-        } else {
-            validateAndLoadGifs(query);
-        }
-    }
-
-    private void validateAndLoadGifs(@Nullable String query) {
-        if (QueryValidator.isValid(query)) {
-            loadGifs(query);
-        }
+        btnTryAgain.setOnClickListener(v -> gifListPresenter.onClickTryAgain(searchView.getQuery().toString()));
     }
 
 
-    private void loadGifs(@NonNull String search) {
-        showState(State.Loading);
-        final Disposable searchDisposable = RestApi.getInstance()
-                .gifs()
-                .search(search)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(this::checkResponseAndShowState, this::handleError);
-        compositeDisposable.add(searchDisposable);
+    @Override
+    public void showData(@NonNull List<GifDTO> gifs) {
+        photosAdapter.replaceItems(gifs);
     }
 
-    private void handleError(Throwable throwable) {
-        if (throwable instanceof IOException) {
-            showState(State.NetworkError);
-            return;
-        }
-        showState(State.ServerError);
-    }
-
-
-    private void checkResponseAndShowState(@NonNull Response<DefaultResponse<List<GifDTO>>> response) {
-        //Here I use Guard Clauses. You can find more here:
-        //https://refactoring.com/catalog/replaceNestedConditionalWithGuardClauses.html
-
-        //Here we have 4 clauses:
-
-        if (!response.isSuccessful()) {
-            showState(State.ServerError);
-            return;
-        }
-
-        final DefaultResponse<List<GifDTO>> body = response.body();
-        if (body == null) {
-            showState(State.HasNoData);
-            return;
-        }
-
-        final List<GifDTO> data = body.getData();
-        if (data == null) {
-            showState(State.HasNoData);
-            return;
-        }
-
-        if (data.isEmpty()) {
-            showState(State.HasNoData);
-            return;
-        }
-
-        photosAdapter.replaceItems(data);
-        showState(State.HasData);
-    }
-
-
+    @Override
     public void showState(@NonNull State state) {
 
         switch (state) {

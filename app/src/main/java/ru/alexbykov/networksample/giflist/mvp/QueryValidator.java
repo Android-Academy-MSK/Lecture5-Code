@@ -1,4 +1,4 @@
-package ru.alexbykov.networksample.ui;
+package ru.alexbykov.networksample.giflist.mvp;
 
 import android.support.annotation.Nullable;
 

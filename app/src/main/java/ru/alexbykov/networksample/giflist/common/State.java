@@ -1,6 +1,6 @@
-package ru.alexbykov.networksample.ui;
+package ru.alexbykov.networksample.giflist.common;
 
-enum State {
+public enum State {
     HasData,
     HasNoData,
     Loading,

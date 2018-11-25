@@ -22,9 +22,16 @@ public final class RestApi {
     private final GifEndpoint gifEndpoint;
 
 
-    public static synchronized RestApi getInstance() {
-        if (sRestApi == null) {
-            sRestApi = new RestApi();
+    public static RestApi getInstance() {
+
+        if (sRestApi != null) {
+            return sRestApi;
+        }
+
+        synchronized (RestApi.class) {
+            if (sRestApi == null) {
+                sRestApi = new RestApi();
+            }
         }
         return sRestApi;
     }
